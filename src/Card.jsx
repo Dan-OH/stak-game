@@ -1,12 +1,11 @@
 function Card({ type, color }) {
   return (
     <div
-      className="card"
-      style={{
-        backgroundColor: color ? color.toLowerCase() : 'lightgray',
-      }}
+      className={`card ${type.toLowerCase()} ${
+        color ? color.toLowerCase() : ''
+      }`}
     >
-      <h2 className="card-type">{color ? `${type}` : type}</h2>
+      <h2>{color ? `${type}` : type}</h2>
     </div>
   );
 }
