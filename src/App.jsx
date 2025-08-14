@@ -6,6 +6,7 @@ function App() {
   const [cardsDiscard, setCardsDiscard] = useState([]);
   const [cardsHand, setCardsHand] = useState([]);
   const [deck, setDeck] = useState(createDeck());
+  const [cardsHandTwo, setCardsHandTwo] = useState([]);
 
   //colored cards
   function createDeck() {
@@ -117,15 +118,28 @@ function App() {
         )}
       </div>
 
-      <div className="cards-hand">
-        {cardsHand.map((card, index) => (
-          <Card
-            key={index}
-            type={card.type}
-            color={card.color}
-            onCardClick={() => handleHandCardClick(index)}
-          />
-        ))}
+      <div className="local-players">
+        <div className="cards-hand local-player player-1">
+          {cardsHand.map((card, index) => (
+            <Card
+              key={index}
+              type={card.type}
+              color={card.color}
+              onCardClick={() => handleHandCardClick(index)}
+            />
+          ))}
+        </div>
+
+        <div className="cards-hand local-player player-2">
+          {cardsHandTwo.map((card, index) => (
+            <Card
+              key={index}
+              type={card.type}
+              color={card.color}
+              onCardClick={() => handleHandCardClick(index)}
+            />
+          ))}
+        </div>
       </div>
     </>
   );

@@ -51,3 +51,12 @@
 .discard-pile {
   margin-bottom: 20px;
 }
+
+.local-players {
+  display: flex;
+  gap: 1rem;
+
+  .local-player {
+    width: 100%;
+  }
+}
