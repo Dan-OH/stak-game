@@ -1,9 +1,3 @@
-// src/components/Card.jsx
-const cardImages = import.meta.glob('./assets/cards/*.svg', {
-  eager: true,
-  import: 'default',
-});
-
 function Card({ interactive, type, color, onCardClick }) {
   const cardNames = {
     0: 'Block',
@@ -30,14 +24,14 @@ function Card({ interactive, type, color, onCardClick }) {
   const fileName = color !== null ? `${type}-${color}.svg` : `${type}.svg`;
 
   // The key in cardImages must match the relative path used in the glob
-  const imageSrc = cardImages[`./assets/cards/${fileName}`];
+  const imageSrc = `/cards/${fileName}`;
 
   return (
     <button
       onClick={() => onCardClick(type)}
       className={`card ${interactive ? 'interactive' : ''}`}
     >
-      {imageSrc && <img src={imageSrc} alt={cardNames[type]} />}
+      <img src={imageSrc} alt={cardNames[type]} />
     </button>
   );
 }
