@@ -9,43 +9,51 @@ function App() {
 
   //colored cards
   function createDeck() {
-    const baseCards = [
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '+2',
-      'Block',
-      'STAK',
-      'Plus',
+    const colors = [0, 1, 2, 3]; // Representing the 4 colors
+    const deck = [];
+
+    // Cards per color
+    const coloredCards = [
+      0, // block
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10, // PLUS
+      11, // PLUS 2
+      12, // STAK
     ];
-    const colors = ['Green', 'Red', 'Blue', 'Yellow'];
 
-    let deck = [];
+    // Add colored cards (1 of each per color)
+    colors.forEach((color) => {
+      coloredCards.forEach((type) => {
+        deck.push({ type, color });
+      });
+    });
 
-    for (const color of colors) {
-      for (const card of baseCards) {
-        deck.push({ type: card, color });
-        deck.push({ type: card, color });
+    // Colorless cards (2 copies each)
+    const colorlessSpecials = [
+      13, // Blank STAK
+      14, // Inverted STAK
+      15, // Super STAK
+      16, // STAR
+    ];
+
+    colorlessSpecials.forEach((type) => {
+      for (let i = 0; i < 2; i++) {
+        deck.push({ type, color: null });
       }
-    }
+    });
 
-    //special cards
-    deck.push({ type: 'Blank STAK' }, { type: 'Blank STAK' });
-    deck.push({ type: 'Inverted STAK' }, { type: 'Inverted STAK' });
-    deck.push({ type: 'Star' }, { type: 'Star' });
-    deck.push({ type: 'Super STAK' }, { type: 'Super STAK' });
-    deck.push(
-      { type: 'Color Wheel' },
-      { type: 'Color Wheel' },
-      { type: 'Color Wheel' },
-      { type: 'Color Wheel' }
-    );
+    // Color Wheel cards (4 copies)
+    for (let i = 0; i < 4; i++) {
+      deck.push({ type: 17, color: null });
+    }
 
     return deck;
   }
