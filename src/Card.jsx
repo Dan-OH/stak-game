@@ -1,4 +1,4 @@
-function Card({ type, color, onCardClick }) {
+function Card({ interactive, type, color, onCardClick }) {
   const cardNames = {
     0: 'Block',
     1: '1',
@@ -20,12 +20,18 @@ function Card({ type, color, onCardClick }) {
     17: 'Color Wheel',
   };
 
+  // Build the file name exactly like your naming convention
+  const fileName = color !== null ? `${type}-${color}.svg` : `${type}.svg`;
+
+  // The key in cardImages must match the relative path used in the glob
+  const imageSrc = `/cards/${fileName}`;
+
   return (
     <button
       onClick={() => onCardClick(type)}
-      className={`card ${color !== null ? 'color-' + color : ''}`}
+      className={`card ${interactive ? 'interactive' : ''}`}
     >
-      <h2>{cardNames[type]}</h2>
+      <img src={imageSrc} alt={cardNames[type]} />
     </button>
   );
 }
