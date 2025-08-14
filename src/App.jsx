@@ -4,6 +4,7 @@ import Card from './Card';
 
 function App() {
   const [count, setCount] = useState(0);
+  const [cardsHand, setCardsHand] = useState([]);
 
   return (
     <>
@@ -11,7 +12,18 @@ function App() {
         count is {count}
       </button>
 
-      <Card type="1" />
+      <button
+        onClick={() =>
+          setCardsHand((prevCards) => [
+            ...prevCards,
+            <Card key={prevCards.length} type="1" />,
+          ])
+        }
+      >
+        Draw Card
+      </button>
+
+      <div className="cards-hand">{cardsHand}</div>
     </>
   );
 }
