@@ -31,6 +31,7 @@ function App() {
     for (const color of colors) {
       for (const card of baseCards) {
         deck.push({ type: card, color });
+        deck.push({ type: card, color });
       }
     }
 
@@ -52,28 +53,24 @@ function App() {
   const drawCard = () => {
     if (deck.length === 0) return;
 
-    const randomIndex = Math.floor(Math.random() * deck.length); // pick random index
+    const randomIndex = Math.floor(Math.random() * deck.length);
     const card = deck[randomIndex];
 
-    setCardsHand((prev) => [...prev, card]); // add to hand
-    setDeck((prevDeck) => prevDeck.filter((_, i) => i !== randomIndex)); // remove from deck
+    setCardsHand((prev) => [...prev, card]);
+    setDeck((prevDeck) => prevDeck.filter((_, i) => i !== randomIndex));
   };
 
   return (
     <>
-      <button onClick={() => setCount((count) => count + 1)}>
-        count is {count}
-      </button>
-
       <button onClick={drawCard}>Draw Card</button>
+
+      <div>Cards left: {deck.length}</div>
 
       <div className="cards-hand">
         {cardsHand.map((card, index) => (
           <Card key={index} type={card.type} color={card.color} />
         ))}
       </div>
-
-      <div>Cards left: {deck.length}</div>
     </>
   );
 }
