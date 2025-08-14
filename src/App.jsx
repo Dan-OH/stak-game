@@ -65,8 +65,14 @@ function App() {
   const startDiscard = () =>
     drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
 
-  const handleHandCardClick = (type) => {
-    console.log(type);
+  const handleHandCardClick = (cardIndex) => {
+    const clickedCard = cardsHand[cardIndex];
+
+    // add the card to the top of the discard pile
+    setCardsDiscard((prev) => [...prev, clickedCard]);
+
+    // remove the card from the hand
+    setCardsHand((prev) => prev.filter((_, i) => i !== cardIndex));
   };
 
   return (
@@ -93,7 +99,7 @@ function App() {
             key={index}
             type={card.type}
             color={card.color}
-            onCardClick={handleHandCardClick}
+            onCardClick={() => handleHandCardClick(index)}
           />
         ))}
       </div>
