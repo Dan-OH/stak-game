@@ -1,12 +1,13 @@
-function Card({ type, color }) {
+function Card({ type, color, onCardClick }) {
   return (
-    <div
+    <button
+      onClick={() => onCardClick(type)}
       className={`card ${type.toLowerCase()} ${
         color ? color.toLowerCase() : ''
       }`}
     >
       <h2>{color ? `${type}` : type}</h2>
-    </div>
+    </button>
   );
 }
 

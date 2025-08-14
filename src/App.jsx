@@ -65,6 +65,10 @@ function App() {
   const startDiscard = () =>
     drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
 
+  const handleHandCardClick = (type) => {
+    console.log(type);
+  };
+
   return (
     <>
       <button onClick={drawCard}>Draw Card</button>
@@ -85,7 +89,12 @@ function App() {
 
       <div className="cards-hand">
         {cardsHand.map((card, index) => (
-          <Card key={index} type={card.type} color={card.color} />
+          <Card
+            key={index}
+            type={card.type}
+            color={card.color}
+            onCardClick={handleHandCardClick}
+          />
         ))}
       </div>
     </>
