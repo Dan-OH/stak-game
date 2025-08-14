@@ -21,7 +21,7 @@ function Card({ interactive, type, color, onCardClick }) {
   };
 
   // Build the file name exactly like your naming convention
-  const fileName = color !== null ? `${type}-${color}.svg` : `${type}.svg`;
+  const fileName = color !== null ? `${type}-${color}.png` : `${type}.png`;
 
   // The key in cardImages must match the relative path used in the glob
   const imageSrc = `/cards/${fileName}`;
