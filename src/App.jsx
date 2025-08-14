@@ -89,7 +89,7 @@ function App() {
     ) {
       // If type 15 (Super STAK), adopt the color of the top discard if it exists
       if (clickedCard.type === 15 && topDiscard) {
-        clickedCard.color = topDiscard.color;
+        clickedCard.color === topDiscard.color;
       }
 
       // add to discard
