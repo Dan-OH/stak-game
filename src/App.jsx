@@ -51,9 +51,12 @@ function App() {
 
   const drawCard = () => {
     if (deck.length === 0) return;
-    const topCard = deck[0];
-    setCardsHand((prev) => [...prev, topCard]);
-    setDeck((prevDeck) => prevDeck.slice(1));
+
+    const randomIndex = Math.floor(Math.random() * deck.length); // pick random index
+    const card = deck[randomIndex];
+
+    setCardsHand((prev) => [...prev, card]); // add to hand
+    setDeck((prevDeck) => prevDeck.filter((_, i) => i !== randomIndex)); // remove from deck
   };
 
   return (
