@@ -36,6 +36,7 @@
 
 .local-players {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 
   .local-player {
