@@ -34,6 +34,7 @@ function App() {
     colors.forEach((color) => {
       coloredCards.forEach((type) => {
         deck.push({ type, color });
+        deck.push({ type, color });
       });
     });
 
