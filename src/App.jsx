@@ -102,8 +102,12 @@ function App() {
 
   return (
     <>
-      <button onClick={drawCard}>Draw Card</button>
-      <button onClick={startDiscard}>Add to Discard</button>
+      <button className="btn" onClick={drawCard}>
+        Draw Card
+      </button>
+      <button className="btn" onClick={startDiscard}>
+        Add to Discard
+      </button>
 
       <div>Cards left: {deck.length}</div>
 
@@ -120,25 +124,35 @@ function App() {
 
       <div className="local-players">
         <div className="cards-hand local-player player-1">
-          {cardsHand.map((card, index) => (
-            <Card
-              key={index}
-              type={card.type}
-              color={card.color}
-              onCardClick={() => handleHandCardClick(index)}
-            />
-          ))}
+          <h2>Player 1</h2>
+
+          <div className="cards-hand-grid">
+            {cardsHand.map((card, index) => (
+              <Card
+                interactive
+                key={index}
+                type={card.type}
+                color={card.color}
+                onCardClick={() => handleHandCardClick(index)}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="cards-hand local-player player-2">
-          {cardsHandTwo.map((card, index) => (
-            <Card
-              key={index}
-              type={card.type}
-              color={card.color}
-              onCardClick={() => handleHandCardClick(index)}
-            />
-          ))}
+          <h2>Player 2</h2>
+
+          <div className="cards-hand-grid">
+            {cardsHandTwo.map((card, index) => (
+              <Card
+                interactive
+                key={index}
+                type={card.type}
+                color={card.color}
+                onCardClick={() => handleHandCardClick(index)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </>
