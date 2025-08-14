@@ -70,17 +70,28 @@ function App() {
   };
 
   const drawCard = () => drawRandomCard(deck, setDeck, cardsHand, setCardsHand);
+
   const startDiscard = () =>
     drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
 
+  // discarding cards
   const handleHandCardClick = (cardIndex) => {
     const clickedCard = cardsHand[cardIndex];
 
-    // add the card to the top of the discard pile
-    setCardsDiscard((prev) => [...prev, clickedCard]);
+    const topDiscard = cardsDiscard[cardsDiscard.length - 1];
 
-    // remove the card from the hand
-    setCardsHand((prev) => prev.filter((_, i) => i !== cardIndex));
+    if (
+      topDiscard.color === null ||
+      clickedCard.color === topDiscard.color ||
+      clickedCard.type === topDiscard.type ||
+      clickedCard.color === null
+    ) {
+      // add to discard
+      setCardsDiscard((prev) => [...prev, clickedCard]);
+
+      // remove from hand
+      setCardsHand((prev) => prev.filter((_, i) => i !== cardIndex));
+    }
   };
 
   return (
