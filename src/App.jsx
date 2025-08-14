@@ -86,7 +86,7 @@ function App() {
       clickedCard.type === topDiscard.type ||
       clickedCard.color === null
     ) {
-      // If type 15 (Super STAK), adopt the color of the top discard if it exists
+      // if super STAK assume previous color
       if (clickedCard.type === 15 && topDiscard) {
         clickedCard.color = topDiscard.color;
       }
