@@ -8,7 +8,8 @@
   width: 100%;
   max-width: 150px;
   aspect-ratio: 2 / 3;
-  font-size: 2rem;
+  font-size: 1rem;
+  text-align: center;
 
   display: flex;
   flex-direction: column;
@@ -17,6 +18,22 @@
 
   h2 {
     margin: 0;
+  }
+
+  &.green {
+    background-color: rgb(35, 136, 65);
+  }
+
+  &.red {
+    background-color: rgb(231, 49, 49);
+  }
+
+  &.blue {
+    background-color: rgb(74, 74, 241);
+  }
+
+  &.yellow {
+    background-color: rgb(204, 204, 74);
   }
 }
 
