@@ -3,7 +3,7 @@ import './App.scss';
 import Card from './Card';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [cardsDiscard, setCardsDiscard] = useState([]);
   const [cardsHand, setCardsHand] = useState([]);
   const [deck, setDeck] = useState(createDeck());
 
@@ -50,21 +50,38 @@ function App() {
     return deck;
   }
 
-  const drawCard = () => {
-    if (deck.length === 0) return;
+  const drawRandomCard = (fromArray, setFromArray, toArray, setToArray) => {
+    if (fromArray.length === 0) return;
 
-    const randomIndex = Math.floor(Math.random() * deck.length);
-    const card = deck[randomIndex];
+    const randomIndex = Math.floor(Math.random() * fromArray.length);
+    const card = fromArray[randomIndex];
 
-    setCardsHand((prev) => [...prev, card]);
-    setDeck((prevDeck) => prevDeck.filter((_, i) => i !== randomIndex));
+    setToArray((prev) => [...prev, card]);
+
+    setFromArray((prev) => prev.filter((_, i) => i !== randomIndex));
   };
+
+  const drawCard = () => drawRandomCard(deck, setDeck, cardsHand, setCardsHand);
+  const startDiscard = () =>
+    drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
 
   return (
     <>
       <button onClick={drawCard}>Draw Card</button>
+      <button onClick={startDiscard}>Add to Discard</button>
 
       <div>Cards left: {deck.length}</div>
+
+      <div className="discard-pile">
+        {cardsDiscard.length > 0 ? (
+          <Card
+            type={cardsDiscard[cardsDiscard.length - 1].type}
+            color={cardsDiscard[cardsDiscard.length - 1].color}
+          />
+        ) : (
+          <div>Empty</div>
+        )}
+      </div>
 
       <div className="cards-hand">
         {cardsHand.map((card, index) => (
