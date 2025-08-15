@@ -20,10 +20,11 @@ function Card({ interactive, type, color, onCardClick }) {
     17: 'Color Wheel',
   };
 
-  // Build the file name exactly like your naming convention
-  const fileName = color !== null ? `${type}-${color}.png` : `${type}.png`;
+  // If Super Stak has a color, display as Stak with that color
+  const displayType = type === 15 && color !== null ? 12 : type;
+  const fileName =
+    color !== null ? `${displayType}-${color}.png` : `${displayType}.png`;
 
-  // The key in cardImages must match the relative path used in the glob
   const imageSrc = `/cards/${fileName}`;
 
   return (

@@ -90,7 +90,7 @@ function App() {
     ) {
       // if super STAK assume previous color
       if (clickedCard.type === 15 && topDiscard) {
-        clickedCard.color === topDiscard.color;
+        clickedCard.color = topDiscard.color;
       }
 
       // add to discard
