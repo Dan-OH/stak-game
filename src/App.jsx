@@ -3,34 +3,18 @@ import './App.scss';
 import Card from './Card';
 
 function App() {
+  const playerCount = 2; // change later
   const [cardsDiscard, setCardsDiscard] = useState([]);
   const [cardsHand, setCardsHand] = useState([]);
-  const [deck, setDeck] = useState(createDeck());
   const [cardsHandTwo, setCardsHandTwo] = useState([]);
+  const [deck, setDeck] = useState(createDeck());
+  const [turn, setTurn] = useState(1);
 
-  //colored cards
   function createDeck() {
-    const colors = [0, 1, 2, 3]; // Representing the 4 colors
+    const colors = [0, 1, 2, 3];
     const deck = [];
 
-    // Cards per color
-    const coloredCards = [
-      0, // block
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10, // PLUS
-      11, // PLUS 2
-      12, // STAK
-    ];
-
-    // Add colored cards (1 of each per color)
+    const coloredCards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     colors.forEach((color) => {
       coloredCards.forEach((type) => {
         deck.push({ type, color });
@@ -38,21 +22,13 @@ function App() {
       });
     });
 
-    // Colorless cards (2 copies each)
-    const colorlessSpecials = [
-      13, // Blank STAK
-      14, // Inverted STAK
-      15, // Super STAK
-      16, // STAR
-    ];
-
+    const colorlessSpecials = [13, 14, 15, 16];
     colorlessSpecials.forEach((type) => {
       for (let i = 0; i < 2; i++) {
         deck.push({ type, color: null });
       }
     });
 
-    // Color Wheel cards (4 copies)
     for (let i = 0; i < 4; i++) {
       deck.push({ type: 17, color: null });
     }
@@ -62,55 +38,86 @@ function App() {
 
   const drawRandomCard = (fromArray, setFromArray, toArray, setToArray) => {
     if (fromArray.length === 0) return;
-
     const randomIndex = Math.floor(Math.random() * fromArray.length);
     const card = fromArray[randomIndex];
-
     setToArray((prev) => [...prev, card]);
-
     setFromArray((prev) => prev.filter((_, i) => i !== randomIndex));
   };
 
-  const drawCard = () => drawRandomCard(deck, setDeck, cardsHand, setCardsHand);
+  const drawCardForPlayer = (player) => {
+    if (player === 1) drawRandomCard(deck, setDeck, cardsHand, setCardsHand);
+    else drawRandomCard(deck, setDeck, cardsHandTwo, setCardsHandTwo);
+  };
 
-  const startDiscard = () =>
+  const drawCard = (player) => {
+    drawCardForPlayer(player);
+    nextTurn({ type: null, color: null });
+  };
+
+  const nextTurn = (playedCard = null) => {
+    if ([10, 16, 17].includes(playedCard?.type)) return; // Plus, Star, Color Wheel
+
+    if (playedCard?.type === 0) {
+      setTurn(((turn + 1) % playerCount) + 1); // skip next player
+      return;
+    }
+
+    if (playedCard?.type === 11) {
+      const nextPlayer = (turn % playerCount) + 1;
+      drawCardForPlayer(nextPlayer);
+      drawCardForPlayer(nextPlayer);
+      setTurn(((turn + 1) % playerCount) + 1); // skip next
+      return;
+    }
+
+    setTurn((prev) => (prev % playerCount) + 1);
+  };
+
+  const startGame = () => {
+    for (let i = 0; i < 8; i++) {
+      for (let player = 1; player <= playerCount; player++) {
+        drawCardForPlayer(player);
+      }
+    }
     drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
+  };
 
-  // discarding cards
-  const handleHandCardClick = (cardIndex) => {
-    const clickedCard = cardsHand[cardIndex];
-
+  const handleHandCardClick = (cardIndex, player) => {
+    const playerHand = player === 1 ? cardsHand : cardsHandTwo;
+    const setPlayerHand = player === 1 ? setCardsHand : setCardsHandTwo;
+    const clickedCard = playerHand[cardIndex];
     const topDiscard = cardsDiscard[cardsDiscard.length - 1];
 
     if (
-      topDiscard.color === null ||
-      clickedCard.color === topDiscard.color ||
-      clickedCard.type === topDiscard.type ||
-      clickedCard.color === null
+      player === turn &&
+      (topDiscard?.color === null ||
+        clickedCard.color === topDiscard?.color ||
+        clickedCard.type === topDiscard?.type ||
+        clickedCard.color === null ||
+        (clickedCard.type === 12 && topDiscard?.type === 15))
     ) {
-      // if super STAK assume previous color
       if (clickedCard.type === 15 && topDiscard) {
         clickedCard.color = topDiscard.color;
       }
 
-      // add to discard
       setCardsDiscard((prev) => [...prev, clickedCard]);
+      setPlayerHand((prev) => prev.filter((_, i) => i !== cardIndex));
 
-      // remove from hand
-      setCardsHand((prev) => prev.filter((_, i) => i !== cardIndex));
+      nextTurn(clickedCard);
     }
   };
 
   return (
     <>
-      <button className="btn" onClick={drawCard}>
-        Draw Card
+      <button className="btn" onClick={() => drawCard(turn)}>
+        Draw Card (Player {turn})
       </button>
-      <button className="btn" onClick={startDiscard}>
-        Add to Discard
+      <button className="btn" onClick={startGame}>
+        Start Game
       </button>
 
       <div>Cards left: {deck.length}</div>
+      <div>Turn: Player {turn}</div>
 
       <div className="discard-pile">
         {cardsDiscard.length > 0 ? (
@@ -124,37 +131,28 @@ function App() {
       </div>
 
       <div className="local-players">
-        <div className="cards-hand local-player player-1">
-          <h2>Player 1</h2>
-
-          <div className="cards-hand-grid">
-            {cardsHand.map((card, index) => (
-              <Card
-                interactive
-                key={index}
-                type={card.type}
-                color={card.color}
-                onCardClick={() => handleHandCardClick(index)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="cards-hand local-player player-2">
-          <h2>Player 2</h2>
-
-          <div className="cards-hand-grid">
-            {cardsHandTwo.map((card, index) => (
-              <Card
-                interactive
-                key={index}
-                type={card.type}
-                color={card.color}
-                onCardClick={() => handleHandCardClick(index)}
-              />
-            ))}
-          </div>
-        </div>
+        {[1, 2].map((playerNum) => {
+          const playerHand = playerNum === 1 ? cardsHand : cardsHandTwo;
+          return (
+            <div
+              key={playerNum}
+              className={`cards-hand local-player player-${playerNum}`}
+            >
+              <h2>Player {playerNum}</h2>
+              <div className="cards-hand-grid">
+                {playerHand.map((card, index) => (
+                  <Card
+                    interactive
+                    key={index}
+                    type={card.type}
+                    color={card.color}
+                    onCardClick={() => handleHandCardClick(index, playerNum)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );
