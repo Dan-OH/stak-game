@@ -115,9 +115,9 @@ function App() {
           clickedCard.color === topDiscard?.color ||
           clickedCard.type === topDiscard?.type ||
           clickedCard.color === null ||
-          (clickedCard.type === 12 && topDiscard?.type === 15))
+          (clickedCard.type === 12 && topDiscard?.type === 13))
       ) {
-        if (clickedCard.type === 15 && topDiscard) {
+        if (clickedCard.type === 13 && topDiscard) {
           clickedCard.color = topDiscard.color;
         }
       } else {

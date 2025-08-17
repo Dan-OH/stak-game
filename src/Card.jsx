@@ -21,7 +21,7 @@ function Card({ interactive, type, color, onCardClick }) {
   };
 
   // If Super Stak has a color, display as Stak with that color
-  const displayType = type === 15 && color !== null ? 12 : type;
+  const displayType = type === 13 && color !== null ? 12 : type;
   const fileName =
     color !== null ? `${displayType}-${color}.png` : `${displayType}.png`;
 
