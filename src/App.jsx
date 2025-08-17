@@ -4,6 +4,7 @@ import Card from './Card';
 
 function App() {
   const playerCount = 2; // change later
+  const [mustPickUp, setMustPickUp] = useState(0);
   const [cardsDiscard, setCardsDiscard] = useState([]);
   const [cardsHand, setCardsHand] = useState([]);
   const [cardsHandTwo, setCardsHandTwo] = useState([]);
@@ -44,13 +45,17 @@ function App() {
     setFromArray((prev) => prev.filter((_, i) => i !== randomIndex));
   };
 
-  const drawCardForPlayer = (player) => {
-    if (player === 1) drawRandomCard(deck, setDeck, cardsHand, setCardsHand);
-    else drawRandomCard(deck, setDeck, cardsHandTwo, setCardsHandTwo);
-  };
-
   const drawCard = (player) => {
-    drawCardForPlayer(player);
+    const playerHand = player === 1 ? cardsHand : cardsHandTwo;
+    const setPlayerHand = player === 1 ? setCardsHand : setCardsHandTwo;
+
+    const timesToDraw = mustPickUp > 0 ? mustPickUp : 1;
+    for (let i = 0; i < timesToDraw; i++) {
+      drawRandomCard(deck, setDeck, playerHand, setPlayerHand);
+    }
+
+    if (mustPickUp > 0) setMustPickUp(0);
+
     nextTurn({ type: null, color: null });
   };
 
@@ -58,16 +63,13 @@ function App() {
     if ([10, 16, 17].includes(playedCard?.type)) return; // Plus, Star, Color Wheel
 
     if (playedCard?.type === 0) {
-      setTurn(((turn + 1) % playerCount) + 1); // skip next player
+      setTurn((prev) => ((prev + 1) % playerCount) + 1);
       return;
     }
 
+    // +2 card
     if (playedCard?.type === 11) {
-      const nextPlayer = (turn % playerCount) + 1;
-      drawCardForPlayer(nextPlayer);
-      drawCardForPlayer(nextPlayer);
-      setTurn(((turn + 1) % playerCount) + 1); // skip next
-      return;
+      setMustPickUp((prev) => prev + 2);
     }
 
     setTurn((prev) => (prev % playerCount) + 1);
@@ -76,7 +78,7 @@ function App() {
   const startGame = () => {
     for (let i = 0; i < 8; i++) {
       for (let player = 1; player <= playerCount; player++) {
-        drawCardForPlayer(player);
+        drawCard(player);
       }
     }
     drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
@@ -88,22 +90,34 @@ function App() {
     const clickedCard = playerHand[cardIndex];
     const topDiscard = cardsDiscard[cardsDiscard.length - 1];
 
-    if (
-      player === turn &&
-      (topDiscard?.color === null ||
-        clickedCard.color === topDiscard?.color ||
-        clickedCard.type === topDiscard?.type ||
-        clickedCard.color === null ||
-        (clickedCard.type === 12 && topDiscard?.type === 15))
-    ) {
-      if (clickedCard.type === 15 && topDiscard) {
-        clickedCard.color = topDiscard.color;
+    if (mustPickUp > 0) {
+      if (
+        player === turn &&
+        (clickedCard.type === 16 || clickedCard.type === 11)
+      ) {
+        if (clickedCard.type === 16) setMustPickUp(0);
+        setCardsDiscard((prev) => [...prev, clickedCard]);
+        setPlayerHand((prev) => prev.filter((_, i) => i !== cardIndex));
+        nextTurn(clickedCard);
       }
+    } else {
+      if (
+        player === turn &&
+        (topDiscard?.color === null ||
+          clickedCard.color === topDiscard?.color ||
+          clickedCard.type === topDiscard?.type ||
+          clickedCard.color === null ||
+          (clickedCard.type === 12 && topDiscard?.type === 15))
+      ) {
+        if (clickedCard.type === 15 && topDiscard) {
+          clickedCard.color = topDiscard.color;
+        }
 
-      setCardsDiscard((prev) => [...prev, clickedCard]);
-      setPlayerHand((prev) => prev.filter((_, i) => i !== cardIndex));
+        setCardsDiscard((prev) => [...prev, clickedCard]);
+        setPlayerHand((prev) => prev.filter((_, i) => i !== cardIndex));
 
-      nextTurn(clickedCard);
+        nextTurn(clickedCard);
+      }
     }
   };
 
@@ -117,7 +131,7 @@ function App() {
       </button>
 
       <div>Cards left: {deck.length}</div>
-      <div>Turn: Player {turn}</div>
+      <div>Pickup Amount: {mustPickUp}</div>
 
       <div className="discard-pile">
         {cardsDiscard.length > 0 ? (
