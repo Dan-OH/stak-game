@@ -44,7 +44,6 @@ function App() {
     const timesToDraw = mustPickUp > 0 ? mustPickUp : 1;
 
     setPlayerHands((prevHands) => {
-      // Make a copy of all hands
       const newHands = prevHands.map((hand) => [...hand]);
       const newDeck = [...deck];
 
@@ -57,7 +56,7 @@ function App() {
         newHands[playerIndex].push(card);
       }
 
-      setDeck(newDeck); // update deck after drawing
+      setDeck(newDeck);
       return newHands;
     });
 
@@ -70,7 +69,8 @@ function App() {
     if ([10, 16, 17].includes(playedCard?.type)) return;
 
     if (playedCard?.type === 0) {
-      setTurn((prev) => (prev + 1) % playerCount);
+      // skip next player
+      setTurn((prev) => (prev + 2) % playerCount);
       return;
     }
 
@@ -82,21 +82,19 @@ function App() {
   };
 
   const startGame = () => {
-    // Deal 8 cards to each player (your existing code)
     for (let i = 0; i < 8; i++) {
       for (let player = 0; player < playerCount; player++) {
         drawCard(player);
       }
     }
 
-    // Draw one card to start the discard pile
     setDeck((prevDeck) => {
       if (prevDeck.length === 0) return prevDeck;
 
       const randomIndex = Math.floor(Math.random() * prevDeck.length);
       const card = prevDeck[randomIndex];
 
-      setCardsDiscard([card]); // put it in the discard pile
+      setCardsDiscard([card]);
       return prevDeck.filter((_, i) => i !== randomIndex);
     });
   };
@@ -123,13 +121,11 @@ function App() {
           clickedCard.color = topDiscard.color;
         }
       } else {
-        return; // Can't play
+        return;
       }
 
-      // Move card to discard pile
       setCardsDiscard((prev) => [...prev, clickedCard]);
 
-      // Remove card from player's hand
       setPlayerHands((prev) =>
         prev.map((hand, idx) =>
           idx === playerIndex ? hand.filter((_, i) => i !== cardIndex) : hand
