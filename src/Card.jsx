@@ -20,7 +20,7 @@ function Card({ interactive, type, color, onCardClick }) {
     17: 'Color Wheel',
   };
 
-  // If Super Stak has a color, display as Stak with that color
+  // If Blank Stak has a color, display as Stak with that color
   const displayType = type === 13 && color !== null ? 12 : type;
   const fileName =
     color !== null ? `${displayType}-${color}.png` : `${displayType}.png`;
