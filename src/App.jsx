@@ -3,13 +3,16 @@ import './App.scss';
 import Card from './Card';
 
 function App() {
-  const playerCount = 2; // change later
+  const playerCount = 2; // can increase
   const [mustPickUp, setMustPickUp] = useState(0);
   const [cardsDiscard, setCardsDiscard] = useState([]);
-  const [cardsHand, setCardsHand] = useState([]);
-  const [cardsHandTwo, setCardsHandTwo] = useState([]);
   const [deck, setDeck] = useState(createDeck());
-  const [turn, setTurn] = useState(1);
+  const [turn, setTurn] = useState(0);
+
+  // Initialize hands dynamically
+  const [playerHands, setPlayerHands] = useState(
+    Array.from({ length: playerCount }, () => [])
+  );
 
   function createDeck() {
     const colors = [0, 1, 2, 3];
@@ -37,22 +40,26 @@ function App() {
     return deck;
   }
 
-  const drawRandomCard = (fromArray, setFromArray, toArray, setToArray) => {
-    if (fromArray.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * fromArray.length);
-    const card = fromArray[randomIndex];
-    setToArray((prev) => [...prev, card]);
-    setFromArray((prev) => prev.filter((_, i) => i !== randomIndex));
-  };
-
-  const drawCard = (player) => {
-    const playerHand = player === 1 ? cardsHand : cardsHandTwo;
-    const setPlayerHand = player === 1 ? setCardsHand : setCardsHandTwo;
-
+  const drawCard = (playerIndex) => {
     const timesToDraw = mustPickUp > 0 ? mustPickUp : 1;
-    for (let i = 0; i < timesToDraw; i++) {
-      drawRandomCard(deck, setDeck, playerHand, setPlayerHand);
-    }
+
+    setPlayerHands((prevHands) => {
+      // Make a copy of all hands
+      const newHands = prevHands.map((hand) => [...hand]);
+      const newDeck = [...deck];
+
+      for (let i = 0; i < timesToDraw; i++) {
+        if (newDeck.length === 0) break;
+
+        const randomIndex = Math.floor(Math.random() * newDeck.length);
+        const card = newDeck.splice(randomIndex, 1)[0];
+
+        newHands[playerIndex].push(card);
+      }
+
+      setDeck(newDeck); // update deck after drawing
+      return newHands;
+    });
 
     if (mustPickUp > 0) setMustPickUp(0);
 
@@ -60,49 +67,52 @@ function App() {
   };
 
   const nextTurn = (playedCard = null) => {
-    if ([10, 16, 17].includes(playedCard?.type)) return; // Plus, Star, Color Wheel
+    if ([10, 16, 17].includes(playedCard?.type)) return;
 
     if (playedCard?.type === 0) {
-      setTurn((prev) => ((prev + 1) % playerCount) + 1);
+      setTurn((prev) => (prev + 1) % playerCount);
       return;
     }
 
-    // +2 card
     if (playedCard?.type === 11) {
       setMustPickUp((prev) => prev + 2);
     }
 
-    setTurn((prev) => (prev % playerCount) + 1);
+    setTurn((prev) => (prev + 1) % playerCount);
   };
 
   const startGame = () => {
+    // Deal 8 cards to each player (your existing code)
     for (let i = 0; i < 8; i++) {
-      for (let player = 1; player <= playerCount; player++) {
+      for (let player = 0; player < playerCount; player++) {
         drawCard(player);
       }
     }
-    drawRandomCard(deck, setDeck, cardsDiscard, setCardsDiscard);
+
+    // Draw one card to start the discard pile
+    setDeck((prevDeck) => {
+      if (prevDeck.length === 0) return prevDeck;
+
+      const randomIndex = Math.floor(Math.random() * prevDeck.length);
+      const card = prevDeck[randomIndex];
+
+      setCardsDiscard([card]); // put it in the discard pile
+      return prevDeck.filter((_, i) => i !== randomIndex);
+    });
   };
 
-  const handleHandCardClick = (cardIndex, player) => {
-    const playerHand = player === 1 ? cardsHand : cardsHandTwo;
-    const setPlayerHand = player === 1 ? setCardsHand : setCardsHandTwo;
-    const clickedCard = playerHand[cardIndex];
+  const handleHandCardClick = (cardIndex, playerIndex) => {
+    const clickedCard = playerHands[playerIndex][cardIndex];
     const topDiscard = cardsDiscard[cardsDiscard.length - 1];
 
-    if (mustPickUp > 0) {
+    if (playerIndex === turn) {
       if (
-        player === turn &&
+        mustPickUp > 0 &&
         (clickedCard.type === 16 || clickedCard.type === 11)
       ) {
         if (clickedCard.type === 16) setMustPickUp(0);
-        setCardsDiscard((prev) => [...prev, clickedCard]);
-        setPlayerHand((prev) => prev.filter((_, i) => i !== cardIndex));
-        nextTurn(clickedCard);
-      }
-    } else {
-      if (
-        player === turn &&
+      } else if (
+        mustPickUp === 0 &&
         (topDiscard?.color === null ||
           clickedCard.color === topDiscard?.color ||
           clickedCard.type === topDiscard?.type ||
@@ -112,19 +122,28 @@ function App() {
         if (clickedCard.type === 15 && topDiscard) {
           clickedCard.color = topDiscard.color;
         }
-
-        setCardsDiscard((prev) => [...prev, clickedCard]);
-        setPlayerHand((prev) => prev.filter((_, i) => i !== cardIndex));
-
-        nextTurn(clickedCard);
+      } else {
+        return; // Can't play
       }
+
+      // Move card to discard pile
+      setCardsDiscard((prev) => [...prev, clickedCard]);
+
+      // Remove card from player's hand
+      setPlayerHands((prev) =>
+        prev.map((hand, idx) =>
+          idx === playerIndex ? hand.filter((_, i) => i !== cardIndex) : hand
+        )
+      );
+
+      nextTurn(clickedCard);
     }
   };
 
   return (
     <>
       <button className="btn" onClick={() => drawCard(turn)}>
-        Draw Card (Player {turn})
+        Draw Card (Player {turn + 1})
       </button>
       <button className="btn" onClick={startGame}>
         Start Game
@@ -145,28 +164,25 @@ function App() {
       </div>
 
       <div className="local-players">
-        {[1, 2].map((playerNum) => {
-          const playerHand = playerNum === 1 ? cardsHand : cardsHandTwo;
-          return (
-            <div
-              key={playerNum}
-              className={`cards-hand local-player player-${playerNum}`}
-            >
-              <h2>Player {playerNum}</h2>
-              <div className="cards-hand-grid">
-                {playerHand.map((card, index) => (
-                  <Card
-                    interactive
-                    key={index}
-                    type={card.type}
-                    color={card.color}
-                    onCardClick={() => handleHandCardClick(index, playerNum)}
-                  />
-                ))}
-              </div>
+        {playerHands.map((hand, playerIndex) => (
+          <div
+            key={playerIndex}
+            className={`cards-hand local-player player-${playerIndex + 1}`}
+          >
+            <h2>Player {playerIndex + 1}</h2>
+            <div className="cards-hand-grid">
+              {hand.map((card, index) => (
+                <Card
+                  interactive
+                  key={index}
+                  type={card.type}
+                  color={card.color}
+                  onCardClick={() => handleHandCardClick(index, playerIndex)}
+                />
+              ))}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </>
   );
