@@ -1,4 +1,4 @@
-function Card({ interactive, type, color, onCardClick }) {
+function Card({ interactive, type, color, onCardClick, grayed }) {
   const cardNames = {
     0: 'Block',
     1: '1',
@@ -32,8 +32,10 @@ function Card({ interactive, type, color, onCardClick }) {
 
   return (
     <button
-      onClick={() => onCardClick(type)}
-      className={`card ${interactive ? 'interactive' : ''}`}
+      onClick={() => interactive && onCardClick(type)}
+      className={`card ${interactive ? 'interactive' : ''} ${
+        grayed ? 'grayed' : ''
+      }`}
     >
       <img src={imageSrc} alt={cardNames[type]} />
     </button>

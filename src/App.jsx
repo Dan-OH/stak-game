@@ -317,18 +317,16 @@ function App() {
       </button>
 
       <div>Cards left: {deck.length}</div>
-      <div>STAK Color: {stakColor}</div>
+      {/* <div>STAK Color: {stakColor}</div>
       <div>Pickup: {mustPickUp}</div>
-      <div>invState: {invertedState ? 'ON' : 'OFF'}</div>
+      <div>invState: {invertedState ? 'ON' : 'OFF'}</div> */}
 
       <div className="discard-pile">
-        {cardsDiscard.length > 0 ? (
+        {cardsDiscard.length > 0 && (
           <Card
             type={cardsDiscard[cardsDiscard.length - 1].type}
             color={cardsDiscard[cardsDiscard.length - 1].color}
           />
-        ) : (
-          <div>Empty</div>
         )}
       </div>
 
@@ -342,11 +340,12 @@ function App() {
             <div className="cards-hand-grid">
               {hand.map((card, index) => (
                 <Card
-                  interactive
+                  interactive={playerIndex === turn}
                   key={index}
                   type={card.type}
                   color={card.color}
                   onCardClick={() => handleHandCardClick(index, playerIndex)}
+                  grayed={playerIndex !== turn}
                 />
               ))}
             </div>

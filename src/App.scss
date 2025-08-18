@@ -22,6 +22,11 @@
       transform: scale(1.1) translate3d(0, -10px, 0);
     }
   }
+
+  &.grayed {
+    filter: brightness(60%);
+    pointer-events: none; // disable clicks
+  }
 }
 
 .cards-hand-grid {
