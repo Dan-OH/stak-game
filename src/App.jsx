@@ -104,10 +104,12 @@ function App() {
   };
 
   const endTurn = () => {
-    if (stakColor !== null || invertedState === true) {
-      const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
-      const currentStakColor = stakColor;
-
+    const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
+    if (
+      stakColor !== null ||
+      invertedState === true ||
+      lastPlayed.type === 17
+    ) {
       if (lastPlayed) {
         // Skip next player
         if (lastPlayed.type === 0) {
@@ -317,9 +319,6 @@ function App() {
       </button>
 
       <div>Cards left: {deck.length}</div>
-      {/* <div>STAK Color: {stakColor}</div>
-      <div>Pickup: {mustPickUp}</div>
-      <div>invState: {invertedState ? 'ON' : 'OFF'}</div> */}
 
       <div className="discard-pile">
         {cardsDiscard.length > 0 && (
