@@ -8,6 +8,7 @@ function App() {
   const [cardsDiscard, setCardsDiscard] = useState([]);
   const [deck, setDeck] = useState(createDeck());
   const [turn, setTurn] = useState(0);
+  const [stakColor, setStakColor] = useState(null);
 
   // Initialize hands dynamically
   const [playerHands, setPlayerHands] = useState(
@@ -65,6 +66,17 @@ function App() {
     nextTurn({ type: null, color: null });
   };
 
+  const endTurn = () => {
+    const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
+
+    if (lastPlayed?.type === 11 && stakColor !== null) {
+      setMustPickUp((prev) => prev + 2);
+    }
+
+    setTurn((prev) => (prev + 1) % playerCount);
+    setStakColor(null);
+  };
+
   const nextTurn = (playedCard = null) => {
     if ([10, 16, 17].includes(playedCard?.type)) return;
 
@@ -73,29 +85,65 @@ function App() {
       setTurn((prev) => (prev + 2) % playerCount);
       return;
     }
-
-    if (playedCard?.type === 11) {
+    //+2 functionality
+    if (playedCard?.type === 11 && stakColor === null) {
       setMustPickUp((prev) => prev + 2);
     }
-
+    //STAK
+    if (playedCard?.type === 12 || playedCard?.type === 13) {
+      if (playedCard.color !== null) {
+        setStakColor(playedCard.color); // store the color of the card just played
+        return;
+      }
+    }
+    if (stakColor != null) {
+      if (playedCard.color !== stakColor) {
+        if (playedCard?.type === 11) {
+          setMustPickUp((prev) => prev + 2);
+        }
+        setStakColor(null);
+      } else {
+        return;
+      }
+    }
     setTurn((prev) => (prev + 1) % playerCount);
   };
 
   const startGame = () => {
-    for (let i = 0; i < 8; i++) {
-      for (let player = 0; player < playerCount; player++) {
-        drawCard(player);
+    setDeck(() => {
+      // Rebuild a fresh deck
+      let freshDeck = createDeck();
+
+      // Reset states
+      const hands = Array.from({ length: playerCount }, () => []);
+      setPlayerHands(hands);
+      setTurn(0);
+      setMustPickUp(0);
+      setStakColor(null);
+
+      // Deal 8 to each player
+      for (let i = 0; i < 8; i++) {
+        for (let p = 0; p < playerCount; p++) {
+          if (freshDeck.length === 0) break;
+          const idx = Math.floor(Math.random() * freshDeck.length);
+          const card = freshDeck.splice(idx, 1)[0];
+          hands[p].push(card);
+        }
       }
-    }
 
-    setDeck((prevDeck) => {
-      if (prevDeck.length === 0) return prevDeck;
+      // Flip starting discard
+      if (freshDeck.length > 0) {
+        const idx = Math.floor(Math.random() * freshDeck.length);
+        const top = freshDeck.splice(idx, 1)[0];
+        setCardsDiscard([top]);
+      } else {
+        setCardsDiscard([]);
+      }
 
-      const randomIndex = Math.floor(Math.random() * prevDeck.length);
-      const card = prevDeck[randomIndex];
+      // Apply updated hands
+      setPlayerHands(hands);
 
-      setCardsDiscard([card]);
-      return prevDeck.filter((_, i) => i !== randomIndex);
+      return freshDeck;
     });
   };
 
@@ -119,6 +167,9 @@ function App() {
       ) {
         if (clickedCard.type === 13 && topDiscard) {
           clickedCard.color = topDiscard.color;
+        }
+        if (clickedCard.type === 17 && topDiscard) {
+          //show modal here
         }
       } else {
         return;
@@ -144,9 +195,13 @@ function App() {
       <button className="btn" onClick={startGame}>
         Start Game
       </button>
+      <button className="btn" onClick={endTurn}>
+        End Turn
+      </button>
 
       <div>Cards left: {deck.length}</div>
-      <div>Pickup Amount: {mustPickUp}</div>
+      <div>STAK Color: {stakColor}</div>
+      <div>Pickup: {mustPickUp}</div>
 
       <div className="discard-pile">
         {cardsDiscard.length > 0 ? (
