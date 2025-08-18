@@ -1,5 +1,5 @@
 // SelectColor.jsx
-import './selectColor.scss';
+import './SelectColor.scss';
 
 function SelectColor({ isOpen, onClose, onSelect }) {
   if (!isOpen) return null;
