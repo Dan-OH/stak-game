@@ -9,6 +9,7 @@ function App() {
   const [deck, setDeck] = useState(createDeck());
   const [turn, setTurn] = useState(0);
   const [stakColor, setStakColor] = useState(null);
+  const [invertedState, setInvertedState] = useState(false);
 
   // Initialize hands dynamically
   const [playerHands, setPlayerHands] = useState(
@@ -71,10 +72,12 @@ function App() {
     // pass `null` as the current stak color since we want to reset it
     nextTurn(lastPlayed, null);
     setStakColor(null);
+    setInvertedState(false);
   };
 
   const nextTurn = (playedCard = null, currentStakColor = stakColor) => {
-    if ([10, 16, 17].includes(playedCard?.type)) return;
+    if ([10, 16, 17].includes(playedCard?.type) || invertedState === true)
+      return;
 
     // Skip next player
     if (playedCard?.type === 0) {
@@ -93,6 +96,20 @@ function App() {
         setStakColor(playedCard.color);
         return;
       }
+    }
+
+    // Inverted STAK
+    if (playedCard?.type === 14) {
+      setInvertedState(true);
+
+      // get color of the card below this one in discard pile
+      const discardLength = cardsDiscard.length;
+      if (discardLength >= 1) {
+        const cardBelow = cardsDiscard[discardLength - 1]; // card below is last in array
+        setStakColor(cardBelow.color);
+      }
+
+      return;
     }
 
     // Handle stacking color rules
@@ -122,6 +139,7 @@ function App() {
       setTurn(0);
       setMustPickUp(0);
       setStakColor(null);
+      setInvertedState(false);
 
       // Deal 8 to each player
       for (let i = 0; i < 8; i++) {
@@ -153,40 +171,65 @@ function App() {
     const clickedCard = playerHands[playerIndex][cardIndex];
     const topDiscard = cardsDiscard[cardsDiscard.length - 1];
 
-    if (playerIndex === turn) {
+    if (playerIndex !== turn) return;
+
+    // Handle Inverted STAK
+    if (invertedState === true) {
+      if (
+        clickedCard.color === stakColor ||
+        !(clickedCard.type >= 1 && clickedCard.type <= 9)
+      ) {
+        return;
+      }
+    } else {
+      // Handle mustPickUp rules
       if (
         mustPickUp > 0 &&
         (clickedCard.type === 16 || clickedCard.type === 11)
       ) {
         if (clickedCard.type === 16) setMustPickUp(0);
-      } else if (
-        mustPickUp === 0 &&
-        (topDiscard?.color === null ||
+      }
+      // Handle normal play rules
+      else if (mustPickUp === 0) {
+        // Prevent inverted STAK (type 14) on colorless cards
+        if (
+          clickedCard.type === 14 &&
+          (!topDiscard || topDiscard.color === null)
+        ) {
+          return; // cannot play inverted STAK here
+        }
+
+        if (
+          topDiscard?.color === null ||
           clickedCard.color === topDiscard?.color ||
           clickedCard.type === topDiscard?.type ||
           clickedCard.color === null ||
-          (clickedCard.type === 12 && topDiscard?.type === 13))
-      ) {
-        if (clickedCard.type === 13 && topDiscard) {
-          clickedCard.color = topDiscard.color;
-        }
-        if (clickedCard.type === 17 && topDiscard) {
-          //show modal here
+          (clickedCard.type === 12 && topDiscard?.type === 13)
+        ) {
+          if (clickedCard.type === 13 && topDiscard) {
+            clickedCard.color = topDiscard.color;
+          }
+          if (clickedCard.type === 17 && topDiscard) {
+            // show modal here
+          }
+        } else {
+          return;
         }
       } else {
         return;
       }
-
-      setCardsDiscard((prev) => [...prev, clickedCard]);
-
-      setPlayerHands((prev) =>
-        prev.map((hand, idx) =>
-          idx === playerIndex ? hand.filter((_, i) => i !== cardIndex) : hand
-        )
-      );
-
-      nextTurn(clickedCard);
     }
+
+    // Play the card
+    setCardsDiscard((prev) => [...prev, clickedCard]);
+
+    setPlayerHands((prev) =>
+      prev.map((hand, idx) =>
+        idx === playerIndex ? hand.filter((_, i) => i !== cardIndex) : hand
+      )
+    );
+
+    nextTurn(clickedCard);
   };
 
   return (
@@ -204,6 +247,7 @@ function App() {
       <div>Cards left: {deck.length}</div>
       <div>STAK Color: {stakColor}</div>
       <div>Pickup: {mustPickUp}</div>
+      <div>invState: {invertedState ? 'ON' : 'OFF'}</div>
 
       <div className="discard-pile">
         {cardsDiscard.length > 0 ? (
