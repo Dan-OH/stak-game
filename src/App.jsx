@@ -43,6 +43,7 @@ function App() {
   }
 
   const drawCard = (playerIndex) => {
+    if (stakColor !== null || invertedState === true) return;
     const timesToDraw = mustPickUp > 0 ? mustPickUp : 1;
 
     setPlayerHands((prevHands) => {
@@ -70,9 +71,27 @@ function App() {
   const endTurn = () => {
     if (stakColor !== null || invertedState === true) {
       const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
-      nextTurn(lastPlayed, null, false);
+      const currentStakColor = stakColor;
+
+      if (lastPlayed) {
+        // Skip next player
+        if (lastPlayed.type === 0) {
+          setTurn((prev) => (prev + 2) % playerCount);
+          setStakColor(null);
+          setInvertedState(false);
+          return;
+        }
+
+        // +2 functionality
+        if (lastPlayed.type === 11) {
+          setMustPickUp((prev) => prev + 2);
+        }
+      }
+
+      // Clear STAK/inverted and advance turn
       setStakColor(null);
       setInvertedState(false);
+      setTurn((prev) => (prev + 1) % playerCount);
     }
   };
 
@@ -215,6 +234,9 @@ function App() {
           (clickedCard.type === 12 && topDiscard?.type === 13)
         ) {
           if (clickedCard.type === 13 && topDiscard) {
+            if (topDiscard.color === null) {
+              return;
+            }
             clickedCard.color = topDiscard.color;
           }
           if (clickedCard.type === 17 && topDiscard) {
