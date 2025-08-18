@@ -68,15 +68,23 @@ function App() {
   };
 
   const endTurn = () => {
-    const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
-    // pass `null` as the current stak color since we want to reset it
-    nextTurn(lastPlayed, null);
-    setStakColor(null);
-    setInvertedState(false);
+    if (stakColor !== null || invertedState === true) {
+      const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
+      nextTurn(lastPlayed, null, false);
+      setStakColor(null);
+      setInvertedState(false);
+    }
   };
 
-  const nextTurn = (playedCard = null, currentStakColor = stakColor) => {
-    if ([10, 16, 17].includes(playedCard?.type) || invertedState === true)
+  const nextTurn = (
+    playedCard = null,
+    currentStakColor = stakColor,
+    currentInvertedState = invertedState
+  ) => {
+    if (
+      [10, 16, 17].includes(playedCard?.type) ||
+      currentInvertedState === true
+    )
       return;
 
     // Skip next player
@@ -234,11 +242,11 @@ function App() {
 
   return (
     <>
-      <button className="btn" onClick={() => drawCard(turn)}>
-        Draw Card (Player {turn + 1})
-      </button>
       <button className="btn" onClick={startGame}>
         Start Game
+      </button>
+      <button className="btn" onClick={() => drawCard(turn)}>
+        Draw Card (Player {turn + 1})
       </button>
       <button className="btn" onClick={endTurn}>
         End Turn
