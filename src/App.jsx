@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './App.scss';
 import Card from './Card';
+import SelectColor from './SelectColor';
 
 function App() {
   const playerCount = 2; // can increase
@@ -10,6 +11,9 @@ function App() {
   const [turn, setTurn] = useState(0);
   const [stakColor, setStakColor] = useState(null);
   const [invertedState, setInvertedState] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [wildCardIndex, setWildCardIndex] = useState(null); // track which card is being colored
+  const [wildCardPlayer, setWildCardPlayer] = useState(null);
 
   // Initialize hands dynamically
   const [playerHands, setPlayerHands] = useState(
@@ -68,6 +72,37 @@ function App() {
     nextTurn({ type: null, color: null });
   };
 
+  const handleColorSelect = (colorNumber) => {
+    if (wildCardIndex !== null && wildCardPlayer !== null) {
+      setPlayerHands((prevHands) => {
+        const newHands = prevHands.map((hand) => [...hand]);
+        newHands[wildCardPlayer][wildCardIndex].color = colorNumber;
+        return newHands;
+      });
+
+      // Pull the card after color is assigned
+      const card = playerHands[wildCardPlayer][wildCardIndex];
+      card.color = colorNumber; // ensure color is set
+
+      setCardsDiscard((prev) => [...prev, card]);
+
+      setPlayerHands((prevHands) =>
+        prevHands.map((hand, idx) =>
+          idx === wildCardPlayer
+            ? hand.filter((_, i) => i !== wildCardIndex)
+            : hand
+        )
+      );
+
+      // Now that color is set, STAK rules will work
+      nextTurn(card);
+
+      setWildCardIndex(null);
+      setWildCardPlayer(null);
+      setModalOpen(false);
+    }
+  };
+
   const endTurn = () => {
     if (stakColor !== null || invertedState === true) {
       const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
@@ -118,8 +153,9 @@ function App() {
     }
 
     // STAK cards
-    if (playedCard?.type === 12 || playedCard?.type === 13) {
+    if ([12, 13, 15].includes(playedCard?.type)) {
       if (playedCard.color !== null) {
+        // only apply once color is chosen
         setStakColor(playedCard.color);
         return;
       }
@@ -239,8 +275,14 @@ function App() {
             }
             clickedCard.color = topDiscard.color;
           }
-          if (clickedCard.type === 17 && topDiscard) {
-            // show modal here
+          if (
+            (clickedCard.type === 17 || clickedCard.type === 15) &&
+            topDiscard
+          ) {
+            setWildCardIndex(cardIndex);
+            setWildCardPlayer(playerIndex);
+            setModalOpen(true);
+            return; // stop until color is chosen
           }
         } else {
           return;
@@ -311,6 +353,11 @@ function App() {
           </div>
         ))}
       </div>
+      <SelectColor
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSelect={handleColorSelect}
+      />
     </>
   );
 }
