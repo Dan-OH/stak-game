@@ -68,44 +68,46 @@ function App() {
 
   const endTurn = () => {
     const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
-
-    if (lastPlayed?.type === 11 && stakColor !== null) {
-      setMustPickUp((prev) => prev + 2);
-    }
-
-    setTurn((prev) => (prev + 1) % playerCount);
+    // pass `null` as the current stak color since we want to reset it
+    nextTurn(lastPlayed, null);
     setStakColor(null);
   };
 
-  const nextTurn = (playedCard = null) => {
+  const nextTurn = (playedCard = null, currentStakColor = stakColor) => {
     if ([10, 16, 17].includes(playedCard?.type)) return;
 
+    // Skip next player
     if (playedCard?.type === 0) {
-      // skip next player
       setTurn((prev) => (prev + 2) % playerCount);
       return;
     }
-    //+2 functionality
-    if (playedCard?.type === 11 && stakColor === null) {
+
+    // +2 functionality
+    if (playedCard?.type === 11 && currentStakColor === null) {
       setMustPickUp((prev) => prev + 2);
     }
-    //STAK
+
+    // STAK cards
     if (playedCard?.type === 12 || playedCard?.type === 13) {
       if (playedCard.color !== null) {
-        setStakColor(playedCard.color); // store the color of the card just played
+        setStakColor(playedCard.color);
         return;
       }
     }
-    if (stakColor != null) {
-      if (playedCard.color !== stakColor) {
-        if (playedCard?.type === 11) {
-          setMustPickUp((prev) => prev + 2);
-        }
-        setStakColor(null);
-      } else {
-        return;
+
+    // Handle stacking color rules
+    if (currentStakColor != null && playedCard.color !== currentStakColor) {
+      if (playedCard?.type === 11) {
+        setMustPickUp((prev) => prev + 2);
       }
+      setStakColor(null);
+    } else if (
+      currentStakColor != null &&
+      playedCard.color === currentStakColor
+    ) {
+      return;
     }
+
     setTurn((prev) => (prev + 1) % playerCount);
   };
 
