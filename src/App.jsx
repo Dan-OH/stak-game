@@ -4,6 +4,7 @@ import Card from './Card';
 import SelectColor from './SelectColor';
 
 function App() {
+  const [gameInProgress, setGameInProgress] = useState(false);
   const playerCount = 2; // can increase
   const [mustPickUp, setMustPickUp] = useState(0);
   const [cardsDiscard, setCardsDiscard] = useState([]);
@@ -19,11 +20,23 @@ function App() {
     Array.from({ length: playerCount }, () => [])
   );
 
+  // Start game
+  useEffect(() => {
+    startGame();
+  }, []);
+
   // win conditions
   useEffect(() => {
+    if (gameInProgress === false) {
+      return;
+    }
+
+    console.log('check ran');
+
     for (let i = 0; i < playerCount; i++) {
       if (playerHands[i].length === 0) {
         console.log('you win');
+        setGameInProgress(false);
       }
     }
   }, [turn]);
@@ -202,6 +215,8 @@ function App() {
   };
 
   const startGame = () => {
+    setGameInProgress(true);
+
     setDeck(() => {
       // Rebuild a fresh deck
       let freshDeck = createDeck();
