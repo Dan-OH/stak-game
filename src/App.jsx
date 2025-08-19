@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.scss';
 import Card from './Card';
 import SelectColor from './SelectColor';
@@ -14,11 +14,19 @@ function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [wildCardIndex, setWildCardIndex] = useState(null); // track which card is being colored
   const [wildCardPlayer, setWildCardPlayer] = useState(null);
-
   // Initialize hands dynamically
   const [playerHands, setPlayerHands] = useState(
     Array.from({ length: playerCount }, () => [])
   );
+
+  // win conditions
+  useEffect(() => {
+    for (let i = 0; i < playerCount; i++) {
+      if (playerHands[i].length === 0) {
+        console.log('you win');
+      }
+    }
+  }, [turn]);
 
   function createDeck() {
     const colors = [0, 1, 2, 3];
