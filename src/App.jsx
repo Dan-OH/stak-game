@@ -3,51 +3,54 @@ import './App.scss';
 import Card from './Card';
 import SelectColor from './SelectColor';
 
+// Build a deck of cards
+function createDeck() {
+  const colors = [0, 1, 2, 3];
+  const deck = [];
+
+  // Colored cards (0–12)
+  const coloredCards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  colors.forEach((color) => {
+    coloredCards.forEach((type) => {
+      deck.push({ type, color });
+      deck.push({ type, color });
+    });
+  });
+
+  // Colorless specials (13–16)
+  const colorlessSpecials = [13, 14, 15, 16];
+  colorlessSpecials.forEach((type) => {
+    for (let i = 0; i < 2; i++) {
+      deck.push({ type, color: null });
+    }
+  });
+
+  // Wilds (17)
+  for (let i = 0; i < 4; i++) {
+    deck.push({ type: 17, color: null });
+  }
+
+  return deck;
+}
+
 function App() {
   const playerCount = 2; // can increase
   const [mustPickUp, setMustPickUp] = useState(0);
   const [cardsDiscard, setCardsDiscard] = useState([]);
-  const [deck, setDeck] = useState(createDeck());
+  const [deck, setDeck] = useState(() => createDeck());
   const [turn, setTurn] = useState(0);
-  const [stakColor, setStakColor] = useState(null);
-  const [invertedState, setInvertedState] = useState(false);
+  const [stackColor, setStackColor] = useState(null);
+  const [isInverted, setIsInverted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [wildCardIndex, setWildCardIndex] = useState(null); // track which card is being colored
-  const [wildCardPlayer, setWildCardPlayer] = useState(null);
+  const [wildCardSelection, setWildCardSelection] = useState(null); // {player, index} or null
 
   // Initialize hands dynamically
   const [playerHands, setPlayerHands] = useState(
     Array.from({ length: playerCount }, () => [])
   );
 
-  function createDeck() {
-    const colors = [0, 1, 2, 3];
-    const deck = [];
-
-    const coloredCards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    colors.forEach((color) => {
-      coloredCards.forEach((type) => {
-        deck.push({ type, color });
-        deck.push({ type, color });
-      });
-    });
-
-    const colorlessSpecials = [13, 14, 15, 16];
-    colorlessSpecials.forEach((type) => {
-      for (let i = 0; i < 2; i++) {
-        deck.push({ type, color: null });
-      }
-    });
-
-    for (let i = 0; i < 4; i++) {
-      deck.push({ type: 17, color: null });
-    }
-
-    return deck;
-  }
-
   const drawCard = (playerIndex) => {
-    if (stakColor !== null || invertedState === true) return;
+    if (stackColor !== null || isInverted) return;
     const timesToDraw = mustPickUp > 0 ? mustPickUp : 1;
 
     setPlayerHands((prevHands) => {
@@ -73,119 +76,96 @@ function App() {
   };
 
   const handleColorSelect = (colorNumber) => {
-    if (wildCardIndex !== null && wildCardPlayer !== null) {
-      setPlayerHands((prevHands) => {
-        const newHands = prevHands.map((hand) => [...hand]);
-        newHands[wildCardPlayer][wildCardIndex].color = colorNumber;
-        return newHands;
-      });
+    if (!wildCardSelection) return;
 
-      // Pull the card after color is assigned
-      const card = playerHands[wildCardPlayer][wildCardIndex];
-      card.color = colorNumber; // ensure color is set
+    const { player, index } = wildCardSelection;
 
-      setCardsDiscard((prev) => [...prev, card]);
+    setPlayerHands((prevHands) => {
+      const newHands = prevHands.map((hand) => [...hand]);
+      const chosenCard = { ...newHands[player][index], color: colorNumber };
 
-      setPlayerHands((prevHands) =>
-        prevHands.map((hand, idx) =>
-          idx === wildCardPlayer
-            ? hand.filter((_, i) => i !== wildCardIndex)
-            : hand
-        )
-      );
+      // Move card to discard
+      setCardsDiscard((prev) => [...prev, chosenCard]);
 
-      // Now that color is set, STAK rules will work
-      nextTurn(card);
+      // Remove card from player’s hand
+      newHands[player] = newHands[player].filter((_, i) => i !== index);
 
-      setWildCardIndex(null);
-      setWildCardPlayer(null);
-      setModalOpen(false);
-    }
+      // Continue game
+      nextTurn(chosenCard);
+
+      return newHands;
+    });
+
+    setWildCardSelection(null);
+    setModalOpen(false);
   };
 
   const endTurn = () => {
     const lastPlayed = cardsDiscard[cardsDiscard.length - 1];
-    if (
-      stakColor !== null ||
-      invertedState === true ||
-      lastPlayed.type === 17
-    ) {
+    if (stackColor !== null || isInverted || lastPlayed?.type === 17) {
       if (lastPlayed) {
-        // Skip next player
+        // Skip
         if (lastPlayed.type === 0) {
           setTurn((prev) => (prev + 2) % playerCount);
-          setStakColor(null);
-          setInvertedState(false);
+          setStackColor(null);
+          setIsInverted(false);
           return;
         }
 
-        // +2 functionality
+        // +2
         if (lastPlayed.type === 11) {
           setMustPickUp((prev) => prev + 2);
         }
       }
 
-      // Clear STAK/inverted and advance turn
-      setStakColor(null);
-      setInvertedState(false);
+      setStackColor(null);
+      setIsInverted(false);
       setTurn((prev) => (prev + 1) % playerCount);
     }
   };
 
   const nextTurn = (
     playedCard = null,
-    currentStakColor = stakColor,
-    currentInvertedState = invertedState
+    currentStackColor = stackColor,
+    currentIsInverted = isInverted
   ) => {
-    if (
-      [10, 16, 17].includes(playedCard?.type) ||
-      currentInvertedState === true
-    )
-      return;
+    if ([10, 16, 17].includes(playedCard?.type) || currentIsInverted) return;
 
-    // Skip next player
     if (playedCard?.type === 0) {
       setTurn((prev) => (prev + 2) % playerCount);
       return;
     }
 
-    // +2 functionality
-    if (playedCard?.type === 11 && currentStakColor === null) {
+    if (playedCard?.type === 11 && currentStackColor === null) {
       setMustPickUp((prev) => prev + 2);
     }
 
-    // STAK cards
-    if ([12, 13, 15].includes(playedCard?.type)) {
-      if (playedCard.color !== null) {
-        // only apply once color is chosen
-        setStakColor(playedCard.color);
-        return;
-      }
-    }
-
-    // Inverted STAK
-    if (playedCard?.type === 14) {
-      setInvertedState(true);
-
-      // get color of the card below this one in discard pile
-      const discardLength = cardsDiscard.length;
-      if (discardLength >= 1) {
-        const cardBelow = cardsDiscard[discardLength - 1]; // card below is last in array
-        setStakColor(cardBelow.color);
-      }
-
+    // Stackable cards
+    if ([12, 13, 15].includes(playedCard?.type) && playedCard.color !== null) {
+      setStackColor(playedCard.color);
       return;
     }
 
-    // Handle stacking color rules
-    if (currentStakColor != null && playedCard.color !== currentStakColor) {
+    // Inverted stack
+    if (playedCard?.type === 14) {
+      setIsInverted(true);
+      const discardLength = cardsDiscard.length;
+      if (discardLength >= 1) {
+        const cardBelow = cardsDiscard[discardLength - 1];
+        setStackColor(cardBelow.color);
+      }
+      return;
+    }
+
+    // Handle breaking stack
+    if (currentStackColor != null && playedCard.color !== currentStackColor) {
       if (playedCard?.type === 11) {
         setMustPickUp((prev) => prev + 2);
       }
-      setStakColor(null);
+      setStackColor(null);
     } else if (
-      currentStakColor != null &&
-      playedCard.color === currentStakColor
+      currentStackColor != null &&
+      playedCard.color === currentStackColor
     ) {
       return;
     }
@@ -195,18 +175,16 @@ function App() {
 
   const startGame = () => {
     setDeck(() => {
-      // Rebuild a fresh deck
       let freshDeck = createDeck();
 
-      // Reset states
       const hands = Array.from({ length: playerCount }, () => []);
       setPlayerHands(hands);
       setTurn(0);
       setMustPickUp(0);
-      setStakColor(null);
-      setInvertedState(false);
+      setStackColor(null);
+      setIsInverted(false);
 
-      // Deal 8 to each player
+      // Deal 8 to each
       for (let i = 0; i < 8; i++) {
         for (let p = 0; p < playerCount; p++) {
           if (freshDeck.length === 0) break;
@@ -216,7 +194,7 @@ function App() {
         }
       }
 
-      // Flip starting discard
+      // Starting discard
       if (freshDeck.length > 0) {
         const idx = Math.floor(Math.random() * freshDeck.length);
         const top = freshDeck.splice(idx, 1)[0];
@@ -225,9 +203,7 @@ function App() {
         setCardsDiscard([]);
       }
 
-      // Apply updated hands
       setPlayerHands(hands);
-
       return freshDeck;
     });
   };
@@ -238,30 +214,25 @@ function App() {
 
     if (playerIndex !== turn) return;
 
-    // Handle Inverted STAK
-    if (invertedState === true) {
+    if (isInverted) {
       if (
-        clickedCard.color === stakColor ||
+        clickedCard.color === stackColor ||
         !(clickedCard.type >= 1 && clickedCard.type <= 9)
       ) {
         return;
       }
     } else {
-      // Handle mustPickUp rules
       if (
         mustPickUp > 0 &&
         (clickedCard.type === 16 || clickedCard.type === 11)
       ) {
         if (clickedCard.type === 16) setMustPickUp(0);
-      }
-      // Handle normal play rules
-      else if (mustPickUp === 0) {
-        // Prevent inverted STAK (type 14) on colorless cards
+      } else if (mustPickUp === 0) {
         if (
           clickedCard.type === 14 &&
           (!topDiscard || topDiscard.color === null)
         ) {
-          return; // cannot play inverted STAK here
+          return; // cannot play inverted on colorless
         }
 
         if (
@@ -271,20 +242,17 @@ function App() {
           clickedCard.color === null ||
           (clickedCard.type === 12 && topDiscard?.type === 13)
         ) {
-          if (clickedCard.type === 13 && topDiscard) {
-            if (topDiscard.color === null) {
-              return;
-            }
+          if (
+            clickedCard.type === 13 &&
+            topDiscard &&
+            topDiscard.color !== null
+          ) {
             clickedCard.color = topDiscard.color;
           }
-          if (
-            (clickedCard.type === 17 || clickedCard.type === 15) &&
-            topDiscard
-          ) {
-            setWildCardIndex(cardIndex);
-            setWildCardPlayer(playerIndex);
+          if ([17, 15].includes(clickedCard.type)) {
+            setWildCardSelection({ player: playerIndex, index: cardIndex });
             setModalOpen(true);
-            return; // stop until color is chosen
+            return;
           }
         } else {
           return;
@@ -294,15 +262,13 @@ function App() {
       }
     }
 
-    // Play the card
+    // Play card
     setCardsDiscard((prev) => [...prev, clickedCard]);
-
     setPlayerHands((prev) =>
       prev.map((hand, idx) =>
         idx === playerIndex ? hand.filter((_, i) => i !== cardIndex) : hand
       )
     );
-
     nextTurn(clickedCard);
   };
 
@@ -351,6 +317,7 @@ function App() {
           </div>
         ))}
       </div>
+
       <SelectColor
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
