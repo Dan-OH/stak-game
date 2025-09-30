@@ -21,7 +21,24 @@ function TestTable() {
   return (
     <div>
       <h2>Data from test-table</h2>
-      <pre>{JSON.stringify(rows, null, 2)}</pre>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Created At</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <td>{row.id}</td>
+              <td>{row.created_at}</td>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
