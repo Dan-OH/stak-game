@@ -4,6 +4,7 @@ import Card from './Card';
 import SelectColor from './SelectColor';
 import { supabase } from './lib/supabaseClient';
 import TestTable from './TestTable';
+import Login from './signInWithPassword';
 
 function App() {
   const [gameInProgress, setGameInProgress] = useState(false);
@@ -333,6 +334,7 @@ function App() {
 
   return (
     <>
+      <Login />
       <TestTable />
       <button className="btn" onClick={startGame}>
         Start Game
