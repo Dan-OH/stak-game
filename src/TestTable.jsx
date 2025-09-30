@@ -8,6 +8,33 @@ function TestTable() {
   // Fetch rows on mount
   useEffect(() => {
     fetchData();
+
+    const channel = supabase
+      .channel('public:test-table')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'test-table' },
+        (payload) => {
+          console.log('Realtime change:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            setRows((prev) => [...prev, payload.new]);
+          }
+          if (payload.eventType === 'UPDATE') {
+            setRows((prev) =>
+              prev.map((row) => (row.id === payload.new.id ? payload.new : row))
+            );
+          }
+          if (payload.eventType === 'DELETE') {
+            setRows((prev) => prev.filter((row) => row.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   async function fetchData() {
